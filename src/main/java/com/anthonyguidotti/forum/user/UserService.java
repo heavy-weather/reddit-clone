@@ -12,10 +12,6 @@ public class UserService {
         this.userDataAccess = userDataAccess;
     }
 
-    public void create(UserModel userModel) {
-        userDataAccess.create(userModel);
-    }
-
     public UserModel read(String sub) {
         return userDataAccess.read(sub);
     }

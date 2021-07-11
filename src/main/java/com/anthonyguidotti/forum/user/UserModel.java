@@ -1,22 +1,10 @@
 package com.anthonyguidotti.forum.user;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public class UserModel {
-    private int id;
-    @JsonIgnore
     private String sub;
     private String givenName;
     private String familyName;
     private String email;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getSub() {
         return sub;

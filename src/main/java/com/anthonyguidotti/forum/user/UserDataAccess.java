@@ -47,7 +47,6 @@ public class UserDataAccess {
         @Override
         public UserModel mapRow(ResultSet rs, int rowNum) throws SQLException {
             UserModel userModel = new UserModel();
-            userModel.setId(rs.getInt("user_id"));
             userModel.setSub(rs.getString("sub"));
             userModel.setGivenName(rs.getString("given_name"));
             userModel.setFamilyName(rs.getString("family_name"));
