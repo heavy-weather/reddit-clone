@@ -7,12 +7,26 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Types;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class UserDataAccess {
+    private static final String TABLE_NAME = "f_user";
+    private static final RowMapper<UserModel> rowMapper = (rs, rowNum) -> {
+        UserModel userModel = new UserModel();
+        userModel.setId(rs.getObject("id", UUID.class));
+        userModel.setSub(rs.getString("sub"));
+        userModel.setGivenName(rs.getString("given_name"));
+        userModel.setFamilyName(rs.getString("family_name"));
+        userModel.setEmail(rs.getString("email"));
+        userModel.setDisplayName(rs.getString("display_name"));
+        userModel.setJoinDate(rs.getTimestamp("join_date").toLocalDateTime());
+
+        return userModel;
+    };
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     public UserDataAccess(NamedParameterJdbcTemplate jdbcTemplate) {
@@ -20,39 +34,31 @@ public class UserDataAccess {
     }
 
     public void create(UserModel userModel) {
-        SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(userModel);
+        BeanPropertySqlParameterSource namedParameters = new BeanPropertySqlParameterSource(userModel);
+        namedParameters.registerSqlType("joinDate", Types.TIMESTAMP);
 
         jdbcTemplate.update(
-                "INSERT INTO user (sub, given_name, family_name, email) " +
-                        "VALUES (:sub, :givenName, :familyName, :email)",
+                "INSERT INTO " + TABLE_NAME + " (id, sub, given_name, family_name, email, display_name, join_date) " +
+                        "VALUES (:id, :sub, :givenName, :familyName, :email, :displayName, :joinDate)",
                 namedParameters
         );
     }
 
     public List<UserModel> read() {
-        return jdbcTemplate.query("SELECT * FROM user", new UserRowMapper());
+        return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME, rowMapper);
+    }
+
+    public void drop() {
+        jdbcTemplate.update("DELETE FROM " + TABLE_NAME, new HashMap<>());
     }
 
     public UserModel read(String sub) {
         SqlParameterSource namedParameters = new MapSqlParameterSource("sub", sub);
 
         return jdbcTemplate.queryForObject(
-                "SELECT * FROM user WHERE sub = :sub LIMIT 1",
+                "SELECT * FROM " + TABLE_NAME + " WHERE sub = :sub LIMIT 1",
                 namedParameters,
-                new UserRowMapper()
+                rowMapper
         );
-    }
-
-    public static class UserRowMapper implements RowMapper<UserModel> {
-        @Override
-        public UserModel mapRow(ResultSet rs, int rowNum) throws SQLException {
-            UserModel userModel = new UserModel();
-            userModel.setSub(rs.getString("sub"));
-            userModel.setGivenName(rs.getString("given_name"));
-            userModel.setFamilyName(rs.getString("family_name"));
-            userModel.setEmail(rs.getString("email"));
-
-            return userModel;
-        }
     }
 }
